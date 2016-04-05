@@ -1,0 +1,66 @@
+(defn str
+  "With no args, returns the empty string. With one arg x, returns
+  x.toString().  (str nil) returns the empty string. With more than
+  one arg, returns the concatenation of the str values of the args."
+  {:tag String
+   :added "1.0"
+   :static true}
+  (^String [] "")
+  (^String [^Object x]
+   (if (nil? x) "" (. x (toString))))
+  (^String [x & ys]
+     ((fn [^StringBuilder sb more]
+          (if more
+            (recur (. sb  (append (str (first more)))) (next more))
+            (str sb)))
+      (new StringBuilder (str x)) ys)))
+
+
+
+(defmulti print-method (fn [x writer]
+                         (let [t (get (meta x) :type)]
+                           (if (keyword? t) t (class x)))))
+(defmulti print-dup (fn [x writer] (class x)))
+
+(defn pr-on
+  {:private true
+   :static true}
+  [x w]
+  (if *print-dup*
+    (print-dup x w)
+    (print-method x w))
+  nil)
+
+(defn pr
+  "Prints the object(s) to the output stream that is the current value
+  of *out*.  Prints the object(s), separated by spaces if there is
+  more than one.  By default, pr and prn print in a way that objects
+  can be read by the reader"
+  {:dynamic true
+   :added "1.0"}
+  ([] nil)
+  ([x]
+     (pr-on x *out*))
+  ([x & more]
+   (pr x)
+   (. *out* (append \space))
+   (if-let [nmore (next more)]
+     (recur (first more) nmore)
+     (apply pr more))))
+
+(defn print
+  "Prints the object(s) to the output stream that is the current value
+  of *out*.  print and println produce output for human consumption."
+  {:added "1.0"
+   :static true}
+  [& more]
+    (binding [*print-readably* nil]
+      (apply pr more)))
+
+(defn println
+  "Same as print followed by (newline)"
+  {:added "1.0"
+   :static true}
+  [& more]
+    (binding [*print-readably* nil]
+      (apply prn more)))
