@@ -73,10 +73,10 @@ DOCKERIZE =
 
 #IMPLS = ada awk bash c d clojure coffee cpp crystal cs erlang elisp \
 #	elixir es6 factor forth fsharp go groovy guile haskell haxe \
-#	io java julia js kotlin lua make mal ocaml matlab miniMAL \
+#	io java julia js kotlin lua make mal mal6 ocaml matlab miniMAL \
 #	nim objc objpascal perl php plpgsql ps python r racket \
 #	rpython ruby rust scala swift swift3 tcl vb vimscript
-IMPLS = js python ruby
+IMPLS = js mal6 python ruby
 
 step0 = step0_repl
 step1 = step1_read_print
@@ -105,12 +105,13 @@ regress_stepA = $(regress_step9) stepA
 test_EXCLUDES += test^bash^step5   # never completes at 10,000
 test_EXCLUDES += test^make^step5   # no TCO capability (iteration or recursion)
 test_EXCLUDES += test^mal^step5    # host impl dependent
+test_EXCLUDES += test^mal6^step5    # host impl dependent
 test_EXCLUDES += test^matlab^step5 # never completes at 10,000
 test_EXCLUDES += test^plpgsql^step5    # too slow for 10,000
 
-perf_EXCLUDES = mal  # TODO: fix this
+perf_EXCLUDES = mal mal6 # TODO: fix this
 
-dist_EXCLUDES += mal
+dist_EXCLUDES += mal mal6
 # TODO: still need to implement dist
 dist_EXCLUDES += guile io julia matlab swift
 
@@ -170,6 +171,7 @@ kotlin_STEP_TO_PROG =  kotlin/$($(1)).jar
 lua_STEP_TO_PROG =     lua/$($(1)).lua
 make_STEP_TO_PROG =    make/$($(1)).mk
 mal_STEP_TO_PROG =     mal/$($(1)).mal
+mal6_STEP_TO_PROG =    mal6/$($(1)).mal
 ocaml_STEP_TO_PROG =   ocaml/$($(1))
 matlab_STEP_TO_PROG =  matlab/$($(1)).m
 miniMAL_STEP_TO_PROG = miniMAL/$($(1)).json
@@ -237,6 +239,7 @@ kotlin_RUNSTEP =  java -jar ../$(2) $(3)
 lua_RUNSTEP =     ../$(2) $(3)
 make_RUNSTEP =    make -f ../$(2) $(3)
 mal_RUNSTEP =     $(call $(MAL_IMPL)_RUNSTEP,stepA,$(call $(MAL_IMPL)_STEP_TO_PROG,stepA),../$(2),")  #"
+mal6_RUNSTEP =    $(call $(MAL_IMPL)_RUNSTEP,stepA,$(call $(MAL_IMPL)_STEP_TO_PROG,stepA),../$(2),")  #"
 ocaml_RUNSTEP =   ../$(2) $(3)
 matlab_RUNSTEP =  $(matlab_cmd) "$($(1))($(call matlab_args,$(3)));quit;"
 miniMAL_RUNSTEP = miniMAL ../$(2) $(3)
@@ -265,7 +268,7 @@ vimscript_RUNSTEP = ./run_vimscript.sh ../$(2) $(3)
 lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
 impl_to_image = kanaka/mal-test-$(call lc,$(1))
 
-actual_impl = $(if $(filter mal,$(1)),$(MAL_IMPL),$(1))
+actual_impl = $(if $(filter mal mal6,$(1)),$(MAL_IMPL),$(1))
 
 get_build_prefix = $(if $(strip $(DOCKERIZE)),docker run -it --rm -u $(shell id -u) -v $(dir $(abspath $(lastword $(MAKEFILE_LIST)))):/mal -w /mal/$(1) $(if $(filter factor,$(1)),-e FACTOR_ROOTS=$(FACTOR_ROOTS),) $(call impl_to_image,$(1)) ,)
 get_run_prefix = $(if $(strip $(DOCKERIZE)),docker run -it --rm -u $(shell id -u) -v $(dir $(abspath $(lastword $(MAKEFILE_LIST)))):/mal -w /mal/$(call actual_impl,$(1)) $(if $(filter factor,$(1)),-e FACTOR_ROOTS=$(FACTOR_ROOTS),) $(call impl_to_image,$(call actual_impl,$(1))) ,)
@@ -325,7 +328,7 @@ $(foreach i,$(DO_IMPLS),$(foreach s,$(STEPS),$(i)^$(s))): $$(call $$(word 1,$$(s
 $(ALL_TESTS): $$(call $$(word 2,$$(subst ^, ,$$(@)))_STEP_TO_PROG,$$(word 3,$$(subst ^, ,$$(@))))
 	@$(foreach impl,$(word 2,$(subst ^, ,$(@))),\
 	  $(foreach step,$(word 3,$(subst ^, ,$(@))),\
-	    cd $(if $(filter mal,$(impl)),$(MAL_IMPL),$(impl)) && \
+	    cd $(if $(filter mal mal6,$(impl)),$(MAL_IMPL),$(impl)) && \
 	    $(foreach test,$(call STEP_TEST_FILES,$(impl),$(step)),\
 	      echo '----------------------------------------------' && \
 	      echo 'Testing $@, step file: $+, test file: $(test)' && \
@@ -382,7 +385,7 @@ perf: $(IMPL_PERF)
 $(IMPL_PERF):
 	@echo "----------------------------------------------"; \
 	$(foreach impl,$(word 2,$(subst ^, ,$(@))),\
-	  cd $(if $(filter mal,$(impl)),$(MAL_IMPL),$(impl)); \
+	  cd $(if $(filter mal mal6,$(impl)),$(MAL_IMPL),$(impl)); \
 	  echo "Performance test for $(impl):"; \
 	  echo 'Running: $(call get_run_prefix,$(impl))$(call $(impl)_RUNSTEP,stepA,$(call $(impl)_STEP_TO_PROG,stepA),../tests/perf1.mal)'; \
           $(call get_run_prefix,$(impl))$(call $(impl)_RUNSTEP,stepA,$(call $(impl)_STEP_TO_PROG,stepA),../tests/perf1.mal); \
@@ -400,7 +403,7 @@ $(IMPL_PERF):
 $(ALL_REPL): $$(call $$(word 2,$$(subst ^, ,$$(@)))_STEP_TO_PROG,$$(word 3,$$(subst ^, ,$$(@))))
 	@$(foreach impl,$(word 2,$(subst ^, ,$(@))),\
 	  $(foreach step,$(word 3,$(subst ^, ,$(@))),\
-	    cd $(if $(filter mal,$(impl)),$(MAL_IMPL),$(impl)); \
+	    cd $(if $(filter mal mal6,$(impl)),$(MAL_IMPL),$(impl)); \
 	    echo 'REPL implementation $(impl), step file: $+'; \
 	    echo 'Running: $(call get_run_prefix,$(impl))$(call $(impl)_RUNSTEP,$(step),$(+))'; \
 	    $(call get_run_prefix,$(impl))$(call $(impl)_RUNSTEP,$(step),$(+));))

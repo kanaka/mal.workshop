@@ -1,0 +1,35 @@
+(def! core_ns
+  (list (list "=" =)
+        (list "throw" throw)
+
+        (list "symbol?" symbol?)
+
+        (list "pr-str" pr-str)
+        (list "str" str)
+        (list "prn" prn)
+        (list "println" println)
+        (list "readline" readline)
+        (list "read-string" read-string)
+        (list "slurp" slurp)
+
+        (list "<" <)
+        (list "<=" <=)
+        (list ">" >)
+        (list ">=" >=)
+        (list "+" +)
+        (list "-" -)
+        (list "*" *)
+        (list "/" /)
+
+        (list "list" list)
+        (list "list?" list?)
+
+        (list "empty?" empty?)
+        (list "count" count)
+        (list "apply" apply)
+
+        (list "atom" atom)
+        (list "atom?" atom?)
+        (list "deref" deref)
+        (list "reset!" reset!)
+        (list "swap!" swap!)))

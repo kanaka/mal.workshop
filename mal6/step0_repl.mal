@@ -1,0 +1,27 @@
+;; read
+(def! READ (fn* (strng)
+  strng))
+
+;; eval
+(def! EVAL (fn* (ast env)
+  ast))
+
+;; print
+(def! PRINT (fn* (exp) exp))
+
+(def! rep (fn* (strng)
+  (PRINT (EVAL (READ strng) ""))))
+
+;; repl loop
+(def! repl-loop (fn* ()
+  (let* (line (readline "mal-user> "))
+    (if line
+      (do
+        (if (not (= "" line))
+          (println (rep line)))
+        (repl-loop))))))
+
+;; Interactive REPL
+(def! -main (fn* (& args) 
+  (repl-loop)))
+(-main)
