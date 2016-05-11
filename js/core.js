@@ -1,9 +1,13 @@
 var types = require('./types'),
+    rlSync = require('./readline').readlineSync,
     reader = require('./reader'),
     printer = require('./printer')
 
 var ns = {
     '=': types.equal_Q,
+    'throw': function(e) { throw new Error(e) },
+
+    'symbol?': function(a) { return a instanceof types.Symbol },
 
     'pr-str': function() {
         return Array.prototype.map.call(arguments, function(e) {
@@ -27,6 +31,7 @@ var ns = {
         }).join(" "))
         return null
     },
+    'readline': function(p) { return rlSync(p) },
     'read-string': function(s) {
         return reader.read_str(s)
     },
@@ -48,6 +53,10 @@ var ns = {
 
     'count': function(a) { return a === null ? 0 : a.length },
     'empty?': function(a) { return a.length === 0 },
+    'apply': function(f) {
+        var args = Array.prototype.slice.call(arguments, 1, arguments.length-1)
+        return f.apply(f, args.concat(arguments[arguments.length-1]))
+    },
 
     'atom': function(a) { return new types.Atom(a) },
     'atom?': function(a) { return a instanceof types.Atom },
