@@ -38,6 +38,14 @@ end
 
 def read_list(rdr)
     ast = []
+    rdr.next
+    while (token = rdr.peek) != ')'
+        if token == nil then
+            raise "expected ')', got EOF"
+        end
+        ast.push(read_form(rdr))
+    end
+    rdr.next
     return ast
 end
 
