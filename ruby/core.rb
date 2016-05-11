@@ -1,14 +1,19 @@
+require "readline"
 require_relative "types"
 require_relative "reader"
 require_relative "printer"
 
 $core_ns = {
     :'=' =>    lambda {|a,b| a ==b},
+    :throw =>  lambda {|a| raise Exception.new(a)},
+
+    :symbol? =>  lambda {|a| a.is_a? Symbol},
 
     :'pr-str' => lambda {|*a| a.map {|e| pr_str(e, true)}.join(" ")},
     :str =>      lambda {|*a| a.map {|e| pr_str(e, false)}.join("")},
     :prn =>      lambda {|*a| puts(a.map {|e| pr_str(e, true)}.join(" "))},
     :println =>  lambda {|*a| puts(a.map {|e| pr_str(e, false)}.join(" "))},
+    :readline => lambda {|a| Readline.readline(a,true)},
     :'read-string' => lambda {|a| read_str(a)},
     :slurp =>    lambda {|a| File.read(a)},
 
@@ -26,6 +31,7 @@ $core_ns = {
 
     :count =>  lambda {|a| a == nil ? 0 : a.size},
     :empty? => lambda {|a| a.size == 0},
+    :apply =>  lambda {|f,*a| f[*a[0..-2].concat(a[-1])]},
 
     :atom =>      lambda {|a| Atom.new(a)},
     :atom? =>     lambda {|a| a.is_a? Atom},
