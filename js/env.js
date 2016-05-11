@@ -1,10 +1,23 @@
 var types = require('./types')
 
 // Env implementation
-function Env(outer) {
+function Env(outer, binds, exprs) {
     this.data = {}
     this.outer = outer || null
 
+    if (binds && exprs) {
+        // Returns a new Env with symbols in binds bound to
+        // corresponding values in exprs
+        for (var i=0; i<binds.length;i++) {
+            if (binds[i].name === "&") {
+                // variable length arguments
+                this.data[binds[i+1].name] = Array.prototype.slice.call(exprs, i)
+                break
+            } else {
+                this.data[binds[i].name] = exprs[i]
+            }
+        }
+    }
     return this
 }
 Env.prototype.find = function (key) {
