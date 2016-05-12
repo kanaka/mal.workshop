@@ -14,5 +14,10 @@ var Symbol = function(name) {
     this.name = name
 }
 
+var Atom = function(value) {
+    this.value = value
+}
+
 exports.equal_Q = equal_Q
 exports.Symbol = Symbol
+exports.Atom = Atom

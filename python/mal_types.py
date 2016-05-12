@@ -19,3 +19,7 @@ class Function():
         self.ast = ast
         self.params = params
         self.env = env
+
+class Atom(object):
+    def __init__(self, val):
+        self.val = val
