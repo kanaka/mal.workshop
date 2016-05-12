@@ -46,6 +46,14 @@ function read_atom (reader) {
 
 function read_list(reader) {
     var list = []
+    var token = reader.next()
+    while ((token = reader.peek()) !== ')') {
+        if (!token) {
+            throw new Error("expected ')', got EOF")
+        }
+        list.push(read_form(reader))
+    }
+    reader.next()
     return list
 }
 

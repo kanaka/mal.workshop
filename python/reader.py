@@ -37,6 +37,13 @@ def read_atom(reader):
 
 def read_list(reader):
     ast = []
+    token = reader.next()
+    token = reader.peek()
+    while token != ")":
+        if not token: raise Exception("expected ')', got EOF")
+        ast.append(read_form(reader))
+        token = reader.peek()
+    reader.next()
     return ast
 
 def read_form(reader):
